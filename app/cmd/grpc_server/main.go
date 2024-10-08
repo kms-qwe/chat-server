@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 
@@ -13,6 +12,7 @@ import (
 )
 
 const (
+	address  = "localhost"
 	grpcPort = "9002"
 )
 
@@ -30,12 +30,12 @@ func (s *server) Delete(_ context.Context, req *desc.DeleteRequest) (*emptypb.Em
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) SendMassage(_ context.Context, req *desc.SendMassageRequest) (*emptypb.Empty, error) {
+func (s *server) SendMessage(_ context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
 	log.Printf("get send message request: %#v\n", req)
 	return &emptypb.Empty{}, nil
 }
 func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", grpcPort))
+	lis, err := net.Listen("tcp", address+grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen %s: %v", grpcPort, err)
 	}

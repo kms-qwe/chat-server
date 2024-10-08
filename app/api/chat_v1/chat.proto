@@ -8,7 +8,7 @@ option go_package = "github.com/kms-qwe/microservices_course_chat-server/app/pkg
 service ChatV1{
     rpc Create(CreateRequest) returns (CreateResponse);
     rpc Delete(DeleteRequest) returns (google.protobuf.Empty);
-    rpc SendMassage(SendMassageRequest) returns (google.protobuf.Empty);
+    rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty);
 }
 
 message Message{
@@ -29,6 +29,6 @@ message DeleteRequest {
     int64 id = 1;
 }
 
-message SendMassageRequest {
+message SendMessageRequest {
     Message message = 1;
 }
