@@ -35,7 +35,7 @@ func (s *server) SendMessage(_ context.Context, req *desc.SendMessageRequest) (*
 	return &emptypb.Empty{}, nil
 }
 func main() {
-	lis, err := net.Listen("tcp", address+grpcPort)
+	lis, err := net.Listen("tcp", address+":"+grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen %s: %v", grpcPort, err)
 	}
