@@ -20,17 +20,17 @@ type server struct {
 	desc.UnimplementedChatV1Server
 }
 
-func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
+func (s *server) Create(_ context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
 	log.Printf("get create request: %#v:\n", req)
 	return &desc.CreateResponse{Id: 0}, nil
 }
 
-func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
+func (s *server) Delete(_ context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
 	log.Printf("get delete request: %#v\n", req)
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) SendMassage(ctx context.Context, req *desc.SendMassageRequest) (*emptypb.Empty, error) {
+func (s *server) SendMassage(_ context.Context, req *desc.SendMassageRequest) (*emptypb.Empty, error) {
 	log.Printf("get send message request: %#v\n", req)
 	return &emptypb.Empty{}, nil
 }
