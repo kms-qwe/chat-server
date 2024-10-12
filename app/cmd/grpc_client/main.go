@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	desc "github.com/kms-qwe/microservices_course_chat-server/app/pkg/chat_v1"
+	desc "github.com/kms-qwe/microservices_course_chat-server/pkg/chat_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
