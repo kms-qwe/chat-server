@@ -1,8 +1,9 @@
-module github.com/kms-qwe/microservices_course_chat-server
+module github.com/kms-qwe/chat-server
 
 go 1.22
 
 require (
+	github.com/joho/godotenv v1.5.1
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.35.1
 )

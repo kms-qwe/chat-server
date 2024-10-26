@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	desc "github.com/kms-qwe/microservices_course_chat-server/pkg/chat_v1"
+	desc "github.com/kms-qwe/chat-server/pkg/chat_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/emptypb"

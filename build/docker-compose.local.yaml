@@ -4,14 +4,14 @@ volumes:
   postgres_volume:
 
 services:
-  auth:
+  chat-server:
     build:
       context: ..
       dockerfile: ./build/Dockerfile
       args:
         PATH_TO_CONFIG_FILE: "./config/local.env"
     container_name: 
-      auth-container
+      chat-server-container
     depends_on:
       - pg
     ports:

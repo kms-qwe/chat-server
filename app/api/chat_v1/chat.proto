@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/kms-qwe/microservices_course_chat-server/app/pkg/chat_V1;chat_v1";
+option go_package = "github.com/kms-qwe/chat-server/app/pkg/chat_V1;chat_v1";
 
 service ChatV1{
     rpc Create(CreateRequest) returns (CreateResponse);

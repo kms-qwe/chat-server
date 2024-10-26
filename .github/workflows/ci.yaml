@@ -1,0 +1,186 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  REGISTRY: "cr.selcloud.ru/kms-qwe"
+  AUTH_IMAGE_NAME: "auth-server"
+  AUTH_CONTAINER_NAME: "auth-server-container"
+  MIGRATOR_IMAGE_NAME: "migrator"
+  MIGRATOR_CONTAINER_NAME: "migrator-container"
+  PG_IMAGE_NAME: "postgres:17.0-alpine3.20"
+  PG_CONTAINER_NAME: "pg-container"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    if: true
+    steps:
+        - uses: actions/checkout@v4
+        - name: set up Go
+          uses: actions/setup-go@v5
+          with:
+            go-version: '1.22'
+            cache-dependency-path: go.sum
+
+        - name: build
+          run: |
+            cd ./app 
+            go build -o ../bin/ -v ./...
+
+        - name: test
+          run: |
+            cd app
+            go test -v ./...
+
+  linter:
+    name: lint
+    runs-on: ubuntu-22.04
+    if: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          # Require: The version of golangci-lint to use.
+          # When `install-mode` is `binary` (default) the value can be v1.2 or v1.2.3 or `latest` to use the latest version.
+          # When `install-mode` is `goinstall` the value can be v1.2.3, `latest`, or the hash of a commit.
+          version: v1.60
+
+          # Optional: working directory, useful for monorepos
+          working-directory: ./app
+
+          # Optional: golangci-lint command line arguments.
+          #
+          # Note: By default, the `.golangci.yml` file should be at the root of the repository.
+          # The location of the configuration file can be changed by using `--config=`
+          args: --timeout=30m --config=../.golangci.pipeline.yaml
+
+          # Optional: show only new issues if it's a pull request. The default value is `false`.
+          # only-new-issues: true
+
+          # Optional: if set to true, then all caching functionality will be completely disabled,
+          #           takes precedence over all other caching options.
+          # skip-cache: true
+
+          # Optional: if set to true, then the action won't cache or restore ~/go/pkg.
+          # skip-pkg-cache: true
+
+          # Optional: if set to true, then the action won't cache or restore ~/.cache/go-build.
+          # skip-build-cache: true
+
+          # Optional: The mode to install golangci-lint. It can be 'binary' or 'goinstall'.
+          # install-mode: "goinstall"
+
+
+  # images-build-and-push:
+  #   runs-on: ubuntu-22.04
+  #   if: false
+  #   steps:
+
+  #     - name: checkout master
+  #       uses: actions/checkout@v3
+      
+  #     - name: set up docker buildx
+  #       uses: docker/setup-buildx-action@v2
+
+  #     - name: login to docker registry
+  #       run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u ${{ secrets.REGISTRY_USERNAME }} $REGISTRY --password-stdin
+      
+  #     - name: build and push docker image - auth
+  #       run: |
+  #         TAG_NAME=$(echo $GITHUB_SHA | head -c7)
+  #         touch .env
+  #         echo GRPC_HOST=${{ secrets.GRPC_HOST }} >> .env
+  #         echo GRPC_PORT=${{ secrets.GRPC_PORT }} >> .env
+  #         echo PG_DSN="host=$PG_CONTAINER_NAME port=${{ secrets.PG_INNER_PORT }} dbname=${{ secrets.PG_DATABASE_NAME }} user=${{ secrets.PG_USER }} password=${{ secrets.PG_PASSWORD }} sslmode=disable" >> .env
+  #         docker buildx create --use
+  #         docker buildx build --no-cache --push \
+  #         --tag $REGISTRY/$AUTH_IMAGE_NAME:$TAG_NAME \
+  #         --build-arg PATH_TO_CONFIG_FILE=.env \
+  #         -f build/Dockerfile .
+
+  #     - name: build and push docker image - migrator
+  #       run: |
+  #         TAG_NAME=$(echo $GITHUB_SHA | head -c7)
+  #         docker buildx create --use
+  #         docker buildx build --no-cache --push --tag $REGISTRY/$MIGRATOR_IMAGE_NAME:$TAG_NAME  --build-arg MIGRATION_DIR=./migration  -f build/migration.Dockerfile .
+      
+  # deploy-images:
+  #   if: false
+  #   runs-on: ubuntu-22.04
+  #   needs: images-build-and-push
+
+  #   steps:
+  #     - name: deploy to selectel cloud via SSH action
+  #       uses: appleboy/ssh-action@v1.0.0
+  #       with:
+  #         host: ${{ secrets.SERVER_HOST }}
+  #         username: ${{ secrets.SSH_USERNAME }}
+  #         key: ${{ secrets.SSHKEY }}
+  #         envs: REGISTRY, AUTH_IMAGE_NAME, AUTH_CONTAINER_NAME, MIGRATOR_IMAGE_NAME, MIGRATOR_CONTAINER_NAME, PG_IMAGE_NAME, PG_CONTAINER_NAME, GITHUB_SHA
+  #         script: |
+  #           # set up variables
+  #           TAG_NAME=$(echo $GITHUB_SHA | head -c7)
+
+  #           # Create the .env file on the server
+  #           cat <<EOF > .env
+  #           POSTGRES_DB=${{ secrets.PG_DATABASE_NAME }}
+  #           POSTGRES_USER=${{ secrets.PG_USER }}
+  #           POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }}
+  #           PG_OUTER_PORT=${{ secrets.PG_OUTER_PORT }}
+  #           PG_INNER_PORT=${{secrets.PG_INNER_PORT }}
+  #           MIGRATION_DIR=${{ secrets.MIGRATION_DIR }}
+  #           DB_HOST=$PG_CONTAINER_NAME
+  #           TZ=Europe/Moscow
+  #           EOF
+            
+  #           # login into selectel registry
+  #           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u ${{ secrets.REGISTRY_USERNAME }} $REGISTRY --password-stdin
+ 
+  #           # stop and remove containers if they exist
+  #           for container in $MIGRATOR_CONTAINER_NAME $AUTH_CONTAINER_NAME $PG_CONTAINER_NAME; do
+  #               if [ "$(docker ps -a -q -f name=$container)" ]; then
+  #                   docker stop $container
+  #                   docker rm $container
+  #               fi
+  #           done 
+
+  #           # init docker network
+  #           docker network create my_network
+
+  #           # start a new containers from a new images
+  #           docker run -d \
+  #           --env-file .env \
+  #           --name $PG_CONTAINER_NAME \
+  #           --network my_network \
+  #           -p ${{ secrets.PG_OUTER_PORT }}:${{ secrets.PG_INNER_PORT }} \
+  #           -t $PG_IMAGE_NAME
+
+
+  #           docker run -d \
+  #           --restart on-failure:10 \
+  #           --env-file .env \
+  #           --network my_network \
+  #           --name $MIGRATOR_CONTAINER_NAME \
+  #           -t $REGISTRY/$MIGRATOR_IMAGE_NAME:$TAG_NAME
+
+  #           docker run -d \
+  #           --name $AUTH_CONTAINER_NAME \
+  #           --network my_network \
+  #           -e TZ=Europe/Moscow \
+  #           -p ${{ secrets.GPRC_OUTER_PORT }}:${{ secrets.GPRC_INNER_PORT }} \
+  #           -t $REGISTRY/$AUTH_IMAGE_NAME:$TAG_NAME
+
+
+            
+
+   
