@@ -83,7 +83,7 @@ jobs:
 
   images-build-and-push:
     runs-on: ubuntu-22.04
-    if: false
+    if: true
     steps:
 
       - name: checkout master
@@ -115,7 +115,7 @@ jobs:
           docker buildx build --no-cache --push --tag $REGISTRY/$MIGRATOR_IMAGE_NAME:$TAG_NAME  --build-arg MIGRATION_DIR=./migration  -f build/migration.Dockerfile .
       
   deploy-images:
-    if: false
+    if: true
     runs-on: ubuntu-22.04
     needs: images-build-and-push
 
