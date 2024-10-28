@@ -13,7 +13,7 @@ services:
     container_name: 
       chat-server-container
     depends_on:
-      - pg
+      - pg-chat
     ports:
       - ${GPRC_OUTER_PORT}:${GPRC_INNER_PORT}
     environment:
@@ -22,7 +22,7 @@ services:
   
 
     
-  pg:
+  pg-chat:
     image: postgres:14-alpine3.17
     container_name: 
       pg-container
