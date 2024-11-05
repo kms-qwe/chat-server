@@ -50,7 +50,7 @@ jobs:
             go test -v ./...
 
   linter:
-    needs: build, test
+    needs: [build, test]
     name: lint
     runs-on: ubuntu-22.04
     if: true
