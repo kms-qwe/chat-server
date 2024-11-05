@@ -1,0 +1,46 @@
+version: '3'
+
+volumes:
+  postgres_volume:
+
+services:
+  chat-server:
+    build:
+      context: ..
+      dockerfile: ./build/Dockerfile
+      args:
+        PATH_TO_CONFIG_FILE: "./config/local.env"
+    container_name: 
+      chat-server-container
+    depends_on:
+      - pg-chat
+    ports:
+      - ${GPRC_OUTER_PORT}:${GPRC_INNER_PORT}
+    environment:
+      - TZ=Europe/Moscow
+
+  
+
+    
+  pg-chat:
+    image: postgres:14-alpine3.17
+    container_name: 
+      pg-container
+    env_file:
+      - ".env"
+    ports:
+      - "${PG_OUTER_PORT}:${PG_INNER_PORT}"
+    volumes:
+      - postgres_volume:/var/lib/portgresql/data
+  
+  migrator:
+    build:
+      context: ..
+      dockerfile: ./build/migration.Dockerfile 
+      args:
+        MIGRATION_DIR: "./migration"
+    container_name: 
+      migrator-container
+    restart: on-failure
+    env_file:
+      - ".env"
