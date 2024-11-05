@@ -16,13 +16,13 @@ env:
   PG_CONTAINER_NAME: "pg-container"
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-22.04
     if: true
     steps:
         - uses: actions/checkout@v4
         - name: set up Go
-          uses: actions/setup-go@v5
+        - uses: actions/setup-go@v5
           with:
             go-version: '1.22'
             cache-dependency-path: go.sum
@@ -32,12 +32,25 @@ jobs:
             cd ./app 
             go build -o ../bin/ -v ./...
 
+        
+  test: 
+    runs-on: ubuntu-22.04
+    if: true  
+    steps:
+        - uses: actions/checkout@v4
+        - name: set up Go
+        - uses: actions/setup-go@v5
+          with:
+            go-version: '1.22'
+            cache-dependency-path: go.sum
+
         - name: test
           run: |
             cd app
             go test -v ./...
 
   linter:
+    needs: build, test
     name: lint
     runs-on: ubuntu-22.04
     if: true
@@ -56,7 +69,7 @@ jobs:
           version: v1.60
 
           # Optional: working directory, useful for monorepos
-          working-directory: ./app
+          working-directory: app
 
           # Optional: golangci-lint command line arguments.
           #
@@ -82,6 +95,7 @@ jobs:
 
 
   images-build-and-push:
+    needs: linter
     runs-on: ubuntu-22.04
     if: true
     steps:
