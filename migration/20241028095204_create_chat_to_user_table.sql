@@ -1,5 +1,5 @@
 -- +goose Up
-create table chat_to_user (
+create table chat_participants (
     chat_id integer,
     user_name text,
 
@@ -8,5 +8,5 @@ create table chat_to_user (
 );
 
 -- +goose Down
-drop table chat_to_user;
+drop table chat_participants;
 
