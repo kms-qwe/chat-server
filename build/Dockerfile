@@ -4,7 +4,7 @@ COPY app /github.com/kms-qwe/chat-server/source/
 WORKDIR /github.com/kms-qwe/chat-server/source/
 
 RUN go mod download
-RUN go build -o ./bin/crud_server ./cmd/grpc_server/main.go
+RUN go build -o ./bin/crud_server ./cmd/main.go
 
 FROM alpine:3.19
 
