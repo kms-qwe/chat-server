@@ -5,24 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	sq "github.com/Masterminds/squirrel"
 	"github.com/kms-qwe/chat-server/internal/model"
 	"github.com/kms-qwe/chat-server/internal/repository"
-	"github.com/kms-qwe/chat-server/internal/repository/postgres/chat/converter"
 	pgClient "github.com/kms-qwe/platform_common/pkg/client/postgres"
-)
-
-const (
-	chatParticipantsTableName = "chat_participants"
-	chatTableName             = "chat"
-	messageTableName          = "message"
-
-	chatIDColumn          = "id"
-	chatIDFkColumn        = "chat_id"
-	userNameColumn        = "user_name"
-	messageIDColumn       = "id"
-	messageTextColumn     = "message_text"
-	messageTimeSendColumn = "message_time_send"
 )
 
 type repo struct {
@@ -38,12 +23,8 @@ func NewChatRepository(pgClient pgClient.Client) repository.ChatRepository {
 }
 
 func (r *repo) getNewChat(ctx context.Context) (int64, error) {
-	builder := sq.Insert(chatTableName).
-		Columns(chatIDColumn).
-		Values(sq.Expr("DEFAULT")).
-		Suffix(fmt.Sprintf("RETURNING %s", chatIDColumn))
 
-	query, args, err := builder.ToSql()
+	query, args, err := queryCreateChat(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to build query: %w", err)
 	}
@@ -68,15 +49,7 @@ func (r *repo) CreateChat(ctx context.Context, usernames []string) (int64, error
 		return 0, err
 	}
 
-	builder := sq.Insert(chatParticipantsTableName).
-		PlaceholderFormat(sq.Dollar).
-		Columns(chatIDFkColumn, userNameColumn)
-
-	for _, username := range usernames {
-		builder = builder.Values(chatID, username)
-	}
-
-	query, args, err := builder.ToSql()
+	query, args, err := queryCreateParticipants(ctx, chatID, usernames)
 	if err != nil {
 		return 0, fmt.Errorf("failed to build query: %w", err)
 	}
@@ -97,11 +70,8 @@ func (r *repo) CreateChat(ctx context.Context, usernames []string) (int64, error
 }
 
 func (r *repo) DeleteChat(ctx context.Context, chatID int64) error {
-	builder := sq.Delete(chatTableName).
-		PlaceholderFormat(sq.Dollar).
-		Where(sq.Eq{chatIDColumn: chatID})
 
-	query, args, err := builder.ToSql()
+	query, args, err := queryDeleteChat(ctx, chatID)
 	if err != nil {
 		return err
 	}
@@ -121,15 +91,8 @@ func (r *repo) DeleteChat(ctx context.Context, chatID int64) error {
 }
 
 func (r *repo) SendMessage(ctx context.Context, message *model.Message) error {
-	repoMessage := converter.ToRepoFromMessage(message)
 
-	builder := sq.Insert(messageTableName).
-		PlaceholderFormat(sq.Dollar).
-		Columns(userNameColumn, messageTextColumn, chatIDFkColumn, messageTimeSendColumn).
-		Values(repoMessage.From, repoMessage.Text, repoMessage.ChatID, repoMessage.SendTime).
-		Suffix(fmt.Sprintf("RETURNING %s", chatIDColumn))
-
-	query, args, err := builder.ToSql()
+	query, args, err := queryCreateMessage(ctx, message)
 	if err != nil {
 		return err
 	}

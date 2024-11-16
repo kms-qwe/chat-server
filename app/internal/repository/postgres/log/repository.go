@@ -1,20 +1,11 @@
-package user
+package log
 
 import (
 	"context"
 	"fmt"
 
-	sq "github.com/Masterminds/squirrel"
 	"github.com/kms-qwe/chat-server/internal/repository"
 	pgClient "github.com/kms-qwe/platform_common/pkg/client/postgres"
-)
-
-const (
-	tableName = "log"
-
-	idColumn      = "id"
-	messageColumn = "message"
-	logTimeColumn = "log_time"
 )
 
 type repo struct {
@@ -30,12 +21,8 @@ func NewLogRepository(db pgClient.Client) repository.LogRepository {
 
 // Log saves log in db
 func (r *repo) Log(ctx context.Context, log string) error {
-	builder := sq.Insert(tableName).
-		PlaceholderFormat(sq.Dollar).
-		Columns(messageColumn).
-		Values(log)
 
-	query, args, err := builder.ToSql()
+	query, args, err := queryLog(ctx, log)
 	if err != nil {
 		return fmt.Errorf("failed to create query: %w", err)
 	}
