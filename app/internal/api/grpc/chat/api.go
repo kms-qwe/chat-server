@@ -17,7 +17,7 @@ type GrpcHandlers struct {
 	chatService service.ChatService
 }
 
-// NewImplementation creates a new instance of GRPCHandlers with the provided ChatService.
+// NewGrpcHandlers creates a new instance of GRPCHandlers with the provided ChatService.
 func NewGrpcHandlers(chatService service.ChatService) *GrpcHandlers {
 	return &GrpcHandlers{
 		chatService: chatService,
