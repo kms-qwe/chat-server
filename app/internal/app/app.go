@@ -5,10 +5,14 @@ import (
 	"flag"
 	"log"
 	"net"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
-	"github.com/kms-qwe/chat-server/internal/closer"
 	"github.com/kms-qwe/chat-server/internal/config"
 	desc "github.com/kms-qwe/chat-server/pkg/chat_v1"
+	"github.com/kms-qwe/platform_common/pkg/closer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -39,13 +43,28 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 // Run runs App
-func (a *App) Run(_ context.Context) error {
+func (a *App) Run(ctx context.Context, cancel context.CancelFunc) error {
 	defer func() {
 		closer.CloseAll()
 		closer.Wait()
 	}()
 
-	return a.runGRPCServer()
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		err := a.runGRPCServer()
+		if err != nil {
+			log.Panic(err)
+		}
+
+		wg.Done()
+	}()
+
+	a.gracefulShutdown(ctx, cancel, wg)
+
+	return nil
 }
 
 func (a *App) initDeps(ctx context.Context) error {
@@ -102,4 +121,28 @@ func (a *App) runGRPCServer() error {
 	}
 
 	return nil
+}
+
+func (a *App) gracefulShutdown(ctx context.Context, cancel context.CancelFunc, wg *sync.WaitGroup) {
+	select {
+	case <-ctx.Done():
+		log.Println("terminating: context cancelled")
+	case <-waitSignal():
+		log.Println("terminating: via signal")
+	}
+
+	a.grpcServer.GracefulStop()
+
+	cancel()
+
+	if wg != nil {
+		wg.Wait()
+	}
+
+}
+
+func waitSignal() chan os.Signal {
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGTERM, syscall.SIGINT)
+	return sigterm
 }

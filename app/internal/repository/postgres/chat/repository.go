@@ -6,18 +6,19 @@ import (
 	"log"
 
 	sq "github.com/Masterminds/squirrel"
-	pgClient "github.com/kms-qwe/chat-server/internal/client/postgres"
 	"github.com/kms-qwe/chat-server/internal/model"
 	"github.com/kms-qwe/chat-server/internal/repository"
 	"github.com/kms-qwe/chat-server/internal/repository/postgres/chat/converter"
+	pgClient "github.com/kms-qwe/platform_common/pkg/client/postgres"
 )
 
 const (
-	chatToUserTableName = "chat_to_user"
-	chatTableName       = "chat"
-	messageTableName    = "message"
+	chatParticipantsTableName = "chat_participants"
+	chatTableName             = "chat"
+	messageTableName          = "message"
 
-	chatIDColumn          = "chat_id"
+	chatIDColumn          = "id"
+	chatIDFkColumn        = "chat_id"
 	userNameColumn        = "user_name"
 	messageIDColumn       = "id"
 	messageTextColumn     = "message_text"
@@ -67,9 +68,9 @@ func (r *repo) CreateChat(ctx context.Context, usernames []string) (int64, error
 		return 0, err
 	}
 
-	builder := sq.Insert(chatToUserTableName).
+	builder := sq.Insert(chatParticipantsTableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns(chatIDColumn, userNameColumn)
+		Columns(chatIDFkColumn, userNameColumn)
 
 	for _, username := range usernames {
 		builder = builder.Values(chatID, username)
@@ -124,8 +125,8 @@ func (r *repo) SendMessage(ctx context.Context, message *model.Message) error {
 
 	builder := sq.Insert(messageTableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns(userNameColumn, messageTextColumn, chatIDColumn, messageTimeSendColumn).
-		Values(repoMessage.From, repoMessage.Text, repoMessage.ChatID, repoMessage.Timestamp).
+		Columns(userNameColumn, messageTextColumn, chatIDFkColumn, messageTimeSendColumn).
+		Values(repoMessage.From, repoMessage.Text, repoMessage.ChatID, repoMessage.SendTime).
 		Suffix(fmt.Sprintf("RETURNING %s", chatIDColumn))
 
 	query, args, err := builder.ToSql()

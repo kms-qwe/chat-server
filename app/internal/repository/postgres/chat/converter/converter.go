@@ -8,19 +8,19 @@ import (
 // ToMessageFromRepo convert serivce model to repo model
 func ToMessageFromRepo(message *modelRepo.Message) *model.Message {
 	return &model.Message{
-		From:      message.From,
-		Text:      message.From,
-		ChatID:    message.ChatID,
-		Timestamp: message.Timestamp,
+		From:     message.From,
+		Text:     message.From,
+		ChatID:   message.ChatID,
+		SendTime: message.SendTime,
 	}
 }
 
 // ToRepoFromMessage convert serivce model to repo model
 func ToRepoFromMessage(message *model.Message) *modelRepo.Message {
 	return &modelRepo.Message{
-		From:      message.From,
-		Text:      message.From,
-		ChatID:    message.ChatID,
-		Timestamp: message.Timestamp,
+		From:     message.From,
+		Text:     message.From,
+		ChatID:   message.ChatID,
+		SendTime: message.SendTime,
 	}
 }

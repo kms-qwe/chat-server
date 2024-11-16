@@ -5,10 +5,6 @@ import (
 	"log"
 
 	"github.com/kms-qwe/chat-server/internal/api/grpc/chat"
-	"github.com/kms-qwe/chat-server/internal/client/postgres"
-	pgv1 "github.com/kms-qwe/chat-server/internal/client/postgres/pg_v1"
-	"github.com/kms-qwe/chat-server/internal/client/postgres/transaction"
-	"github.com/kms-qwe/chat-server/internal/closer"
 	"github.com/kms-qwe/chat-server/internal/config"
 	"github.com/kms-qwe/chat-server/internal/config/env"
 	"github.com/kms-qwe/chat-server/internal/repository"
@@ -16,6 +12,10 @@ import (
 	logpg "github.com/kms-qwe/chat-server/internal/repository/postgres/log"
 	"github.com/kms-qwe/chat-server/internal/service"
 	chatserv "github.com/kms-qwe/chat-server/internal/service/chat"
+	"github.com/kms-qwe/platform_common/pkg/client/postgres"
+	pg "github.com/kms-qwe/platform_common/pkg/client/postgres/pg"
+	"github.com/kms-qwe/platform_common/pkg/client/postgres/transaction"
+	"github.com/kms-qwe/platform_common/pkg/closer"
 )
 
 type serviceProvider struct {
@@ -29,7 +29,7 @@ type serviceProvider struct {
 
 	userService service.ChatService
 
-	userImpl *chat.Implementation
+	userImpl *chat.GrpcHandlers
 }
 
 func newServiceProvider() *serviceProvider {
@@ -39,7 +39,7 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 	if s.pgConfig == nil {
 		cfg, err := env.NewPGConfig()
 		if err != nil {
-			log.Fatalf("failed to get postgres config: %s", err.Error())
+			log.Panicf("failed to get postgres config: %s", err.Error())
 		}
 
 		s.pgConfig = cfg
@@ -52,7 +52,7 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	if s.grpcConfig == nil {
 		cfg, err := env.NewGRPCConfig()
 		if err != nil {
-			log.Fatalf("failed to get grpc config: %s", err.Error())
+			log.Panicf("failed to get grpc config: %s", err.Error())
 		}
 
 		s.grpcConfig = cfg
@@ -63,15 +63,15 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 
 func (s *serviceProvider) PGClient(ctx context.Context) postgres.Client {
 	if s.pgClient == nil {
-		pgClient, err := pgv1.NewPgClient(ctx, s.PGConfig().DSN())
+		pgClient, err := pg.NewPgClient(ctx, s.PGConfig().DSN())
 
 		if err != nil {
-			log.Fatalf("failed to create pg client: %v", err)
+			log.Panicf("failed to create pg client: %v", err)
 		}
 
 		err = pgClient.DB().Ping(ctx)
 		if err != nil {
-			log.Fatalf("ping error: %s", err.Error())
+			log.Panicf("ping error: %s", err.Error())
 		}
 		s.pgClient = pgClient
 
@@ -114,9 +114,9 @@ func (s *serviceProvider) ChatService(ctx context.Context) service.ChatService {
 	return s.userService
 }
 
-func (s *serviceProvider) UserImpl(ctx context.Context) *chat.Implementation {
+func (s *serviceProvider) UserImpl(ctx context.Context) *chat.GrpcHandlers {
 	if s.userImpl == nil {
-		s.userImpl = chat.NewImplementation(s.ChatService(ctx))
+		s.userImpl = chat.NewGrpcHandlers(s.ChatService(ctx))
 	}
 
 	return s.userImpl

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
-	pgClient "github.com/kms-qwe/chat-server/internal/client/postgres"
 	"github.com/kms-qwe/chat-server/internal/repository"
+	pgClient "github.com/kms-qwe/platform_common/pkg/client/postgres"
 )
 
 const (
