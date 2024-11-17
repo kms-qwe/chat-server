@@ -59,7 +59,6 @@ func (a *App) Run(ctx context.Context, cancel context.CancelFunc) error {
 			log.Panic(err)
 		}
 
-		wg.Done()
 	}()
 
 	a.gracefulShutdown(ctx, cancel, wg)

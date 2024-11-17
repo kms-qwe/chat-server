@@ -22,7 +22,7 @@ func NewChatRepository(pgClient pgClient.Client) repository.ChatRepository {
 	}
 }
 
-func (r *repo) getNewChat(ctx context.Context) (int64, error) {
+func (r *repo) CreateChat(ctx context.Context) (int64, error) {
 
 	query, args, err := queryCreateChat(ctx)
 	if err != nil {
@@ -30,7 +30,7 @@ func (r *repo) getNewChat(ctx context.Context) (int64, error) {
 	}
 
 	q := pgClient.Query{
-		Name:     "chat_repository.getNewChat",
+		Name:     "chat_repository.CraeteChat",
 		QueryRaw: query,
 	}
 
@@ -43,30 +43,26 @@ func (r *repo) getNewChat(ctx context.Context) (int64, error) {
 	return id, nil
 }
 
-func (r *repo) CreateChat(ctx context.Context, usernames []string) (int64, error) {
-	chatID, err := r.getNewChat(ctx)
-	if err != nil {
-		return 0, err
-	}
+func (r *repo) CreateParticipants(ctx context.Context, chatID int64, usernames []string) error {
 
 	query, args, err := queryCreateParticipants(ctx, chatID, usernames)
 	if err != nil {
-		return 0, fmt.Errorf("failed to build query: %w", err)
+		return fmt.Errorf("failed to build query: %w", err)
 	}
 
 	q := pgClient.Query{
-		Name:     "chat_repository.getNewChat",
+		Name:     "chat_repository.CreateParticipants",
 		QueryRaw: query,
 	}
 
 	res, err := r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
-		return 0, fmt.Errorf("failed to insert chat users: %w", err)
+		return fmt.Errorf("failed to insert chat users: %w", err)
 	}
 
 	log.Printf("created chat with id: %d, with number of users: %d\n", chatID, res.RowsAffected())
 
-	return chatID, nil
+	return nil
 }
 
 func (r *repo) DeleteChat(ctx context.Context, chatID int64) error {

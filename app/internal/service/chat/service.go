@@ -32,10 +32,16 @@ func NewUserService(
 // Create creates a new user using the provided user model
 func (s *serv) CreateChat(ctx context.Context, usernames []string) (int64, error) {
 
-	var id int64
+	var chatID int64
 	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
 		var errTx error
-		id, errTx = s.chatRepository.CreateChat(ctx, usernames)
+
+		chatID, errTx = s.chatRepository.CreateChat(ctx)
+		if errTx != nil {
+			return errTx
+		}
+
+		errTx = s.chatRepository.CreateParticipants(ctx, chatID, usernames)
 		if errTx != nil {
 			return errTx
 		}
@@ -52,7 +58,7 @@ func (s *serv) CreateChat(ctx context.Context, usernames []string) (int64, error
 		return 0, err
 	}
 
-	return id, nil
+	return chatID, nil
 }
 
 // Delete delete a new user using the provided id

@@ -27,9 +27,9 @@ type serviceProvider struct {
 	chatRepository repository.ChatRepository
 	logRepository  repository.LogRepository
 
-	userService service.ChatService
+	chatService service.ChatService
 
-	userImpl *chat.GrpcHandlers
+	chatGrpcHandlers *chat.GrpcHandlers
 }
 
 func newServiceProvider() *serviceProvider {
@@ -107,17 +107,17 @@ func (s *serviceProvider) LogRepository(ctx context.Context) repository.LogRepos
 }
 
 func (s *serviceProvider) ChatService(ctx context.Context) service.ChatService {
-	if s.userService == nil {
-		s.userService = chatserv.NewUserService(s.ChatRepository(ctx), s.LogRepository(ctx), s.TxManager(ctx))
+	if s.chatService == nil {
+		s.chatService = chatserv.NewUserService(s.ChatRepository(ctx), s.LogRepository(ctx), s.TxManager(ctx))
 	}
 
-	return s.userService
+	return s.chatService
 }
 
 func (s *serviceProvider) UserImpl(ctx context.Context) *chat.GrpcHandlers {
-	if s.userImpl == nil {
-		s.userImpl = chat.NewGrpcHandlers(s.ChatService(ctx))
+	if s.chatGrpcHandlers == nil {
+		s.chatGrpcHandlers = chat.NewGrpcHandlers(s.ChatService(ctx))
 	}
 
-	return s.userImpl
+	return s.chatGrpcHandlers
 }
