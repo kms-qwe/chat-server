@@ -1,7 +1,7 @@
 version: '3.8'
 
 volumes:
-  postgres_volume:
+  chat_postgres_volume:
 
 services:
   chat-server:
@@ -13,7 +13,7 @@ services:
     container_name: 
       chat-server-container
     depends_on:
-      migrator:
+      chat-migrator:
         condition: service_completed_successfully
     ports:
       - ${GPRC_OUTER_PORT}:${GPRC_INNER_PORT}
@@ -23,32 +23,32 @@ services:
   
 
     
-  pg-chat:
+  chat-pg:
     image: postgres:14-alpine3.17
     container_name: 
-      pg-container
+      chat-pg-container
     env_file:
       - ".env"
     ports:
       - "${PG_OUTER_PORT}:${PG_INNER_PORT}"
     volumes:
-      - postgres_volume:/var/lib/portgresql/data
+      - chat_postgres_volume:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
   
-  migrator:
+  chat-migrator:
     build:
       context: ..
       dockerfile: ./build/migration.Dockerfile 
       args:
         MIGRATION_DIR: "./migration"
     container_name: 
-      migrator-container
+      chat-migrator-container
     depends_on:
-      pg-chat:
+      chat-pg:
         condition: service_healthy
     env_file:
       - ".env"
