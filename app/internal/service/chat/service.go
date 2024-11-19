@@ -16,8 +16,8 @@ type serv struct {
 	txManager      pgClient.TxManager
 }
 
-// NewUserService creates new a UserService with provided  UserRepository LogRepository TxManager
-func NewUserService(
+// NewChatService creates new a UserService with provided  UserRepository LogRepository TxManager
+func NewChatService(
 	chatRepository repository.ChatRepository,
 	logRepository repository.LogRepository,
 	txManager pgClient.TxManager,
@@ -29,7 +29,7 @@ func NewUserService(
 	}
 }
 
-// Create creates a new user using the provided user model
+// CreateChat creates chat with given participants and return its id
 func (s *serv) CreateChat(ctx context.Context, usernames []string) (int64, error) {
 
 	var chatID int64
@@ -61,7 +61,7 @@ func (s *serv) CreateChat(ctx context.Context, usernames []string) (int64, error
 	return chatID, nil
 }
 
-// Delete delete a new user using the provided id
+// DeleteChat deletes chat with id equal chatID
 func (s *serv) DeleteChat(ctx context.Context, id int64) error {
 	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
 		var errTx error
@@ -85,7 +85,7 @@ func (s *serv) DeleteChat(ctx context.Context, id int64) error {
 	return nil
 }
 
-// Create creates a new user using the provided user model
+// SendMessage creates message with given params
 func (s *serv) SendMessage(ctx context.Context, message *model.Message) error {
 
 	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {

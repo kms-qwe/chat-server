@@ -13,6 +13,7 @@ type pgConfig struct {
 	dsn string
 }
 
+// DSN provides postgres DSN
 func (p *pgConfig) DSN() string {
 	return p.dsn
 }

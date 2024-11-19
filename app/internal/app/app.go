@@ -101,7 +101,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	reflection.Register(a.grpcServer)
 
-	desc.RegisterChatV1Server(a.grpcServer, a.serviceProvider.UserImpl(ctx))
+	desc.RegisterChatV1Server(a.grpcServer, a.serviceProvider.ChatGrpcHandlers(ctx))
 
 	return nil
 }

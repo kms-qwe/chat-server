@@ -22,6 +22,7 @@ func NewChatRepository(pgClient pgClient.Client) repository.ChatRepository {
 	}
 }
 
+// CreateChat creates chat and return its id
 func (r *repo) CreateChat(ctx context.Context) (int64, error) {
 
 	query, args, err := queryCreateChat(ctx)
@@ -43,6 +44,7 @@ func (r *repo) CreateChat(ctx context.Context) (int64, error) {
 	return id, nil
 }
 
+// CreateParticipants adds participants to chat with id equal chatID
 func (r *repo) CreateParticipants(ctx context.Context, chatID int64, usernames []string) error {
 
 	query, args, err := queryCreateParticipants(ctx, chatID, usernames)
@@ -65,6 +67,7 @@ func (r *repo) CreateParticipants(ctx context.Context, chatID int64, usernames [
 	return nil
 }
 
+// DeleteChat deletes chat with id equal chatID
 func (r *repo) DeleteChat(ctx context.Context, chatID int64) error {
 
 	query, args, err := queryDeleteChat(ctx, chatID)
@@ -86,6 +89,7 @@ func (r *repo) DeleteChat(ctx context.Context, chatID int64) error {
 	return nil
 }
 
+// SendMessage creates message with given params
 func (r *repo) SendMessage(ctx context.Context, message *model.Message) error {
 
 	query, args, err := queryCreateMessage(ctx, message)

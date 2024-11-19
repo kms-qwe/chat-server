@@ -35,6 +35,8 @@ type serviceProvider struct {
 func newServiceProvider() *serviceProvider {
 	return &serviceProvider{}
 }
+
+// PGConfig provides pgconfig
 func (s *serviceProvider) PGConfig() config.PGConfig {
 	if s.pgConfig == nil {
 		cfg, err := env.NewPGConfig()
@@ -48,6 +50,7 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 	return s.pgConfig
 }
 
+// GRPCConfig provides grpc config
 func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	if s.grpcConfig == nil {
 		cfg, err := env.NewGRPCConfig()
@@ -61,6 +64,7 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
+// PGClient provides pg client
 func (s *serviceProvider) PGClient(ctx context.Context) postgres.Client {
 	if s.pgClient == nil {
 		pgClient, err := pg.NewPgClient(ctx, s.PGConfig().DSN())
@@ -81,6 +85,7 @@ func (s *serviceProvider) PGClient(ctx context.Context) postgres.Client {
 	return s.pgClient
 }
 
+// TxManager provides tx manager
 func (s *serviceProvider) TxManager(ctx context.Context) postgres.TxManager {
 	if s.txManager == nil {
 		s.txManager = transaction.NewTransactionManager(s.PGClient(ctx).DB())
@@ -90,6 +95,7 @@ func (s *serviceProvider) TxManager(ctx context.Context) postgres.TxManager {
 	return s.txManager
 }
 
+// ChatRepository provides ChatRepository
 func (s *serviceProvider) ChatRepository(ctx context.Context) repository.ChatRepository {
 	if s.chatRepository == nil {
 		s.chatRepository = chatpg.NewChatRepository(s.PGClient(ctx))
@@ -98,6 +104,7 @@ func (s *serviceProvider) ChatRepository(ctx context.Context) repository.ChatRep
 	return s.chatRepository
 }
 
+// LogRepository provides  LogRepository
 func (s *serviceProvider) LogRepository(ctx context.Context) repository.LogRepository {
 	if s.logRepository == nil {
 		s.logRepository = logpg.NewLogRepository(s.PGClient(ctx))
@@ -106,15 +113,17 @@ func (s *serviceProvider) LogRepository(ctx context.Context) repository.LogRepos
 	return s.logRepository
 }
 
+// ChatService provides ChatService
 func (s *serviceProvider) ChatService(ctx context.Context) service.ChatService {
 	if s.chatService == nil {
-		s.chatService = chatserv.NewUserService(s.ChatRepository(ctx), s.LogRepository(ctx), s.TxManager(ctx))
+		s.chatService = chatserv.NewChatService(s.ChatRepository(ctx), s.LogRepository(ctx), s.TxManager(ctx))
 	}
 
 	return s.chatService
 }
 
-func (s *serviceProvider) UserImpl(ctx context.Context) *chat.GrpcHandlers {
+// ChatGrpcHandlers provides ChatGrpcHandlers
+func (s *serviceProvider) ChatGrpcHandlers(ctx context.Context) *chat.GrpcHandlers {
 	if s.chatGrpcHandlers == nil {
 		s.chatGrpcHandlers = chat.NewGrpcHandlers(s.ChatService(ctx))
 	}
