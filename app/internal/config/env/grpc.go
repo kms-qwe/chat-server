@@ -18,6 +18,7 @@ type grpcConfig struct {
 	port string
 }
 
+// Address provides grpc serv address
 func (g *grpcConfig) Address() string {
 	return net.JoinHostPort(g.host, g.port)
 }
